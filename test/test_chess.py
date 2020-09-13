@@ -1,56 +1,49 @@
 import pdb
 import numpy as np
-from objects.Figure import (
-    chess_board,
-    chessDiagonals,
-    knight_list,
-    Knight,
-    Rook,
-    chessCardinals,
-    Queen,
-    King,
-    king_list,
-    is_in_bounds,
-)
+
+from exceptions import FieldOutOfBoundsError, MoveNotPermittedError
 from factories.figure_factory import FigureFactory
-from objects.Figure import Pawn, Bishop
+from objects.Figure import Pawn, Bishop, Knight, Rook, Queen, King
+from settings import CHESS_BOARD, CHESS_DIAGONALS, CHESS_CARDINALS
+from utils import is_in_bounds
 
 
 class TestPawn:
     def test_list_available_moves_pawn_out_of_board(self):
         data = FigureFactory.build(field="H9")
-        expected_move = self.__list_available_moves(data["field"])
+        error = None
+        self.__list_available_moves(data["field"])
         pawn = Pawn(**data)
-        available_moves, error = pawn.list_available_moves()
-        assert available_moves == expected_move
+        try:
+            pawn.list_available_moves()
+        except FieldOutOfBoundsError as err:
+            error = err.args[0]
+
+        assert error == "Field does not exist."
 
     def test_list_available_moves_pawn(self):
         data = FigureFactory.build()
         expected_move = self.__list_available_moves(data["field"])
         pawn = Pawn(**data)
         available_moves = pawn.list_available_moves()
-        assert available_moves[0] == expected_move[0]
+        assert available_moves == expected_move
 
     def test_valid_movement(self):
         data = FigureFactory.build()
         pawn = Pawn(**data)
+        available_moves = pawn.list_available_moves()
         dest_field = f"{pawn.field[0]}{int(pawn.field[1]) + 1}"
-        check_move_valid = pawn.validate_move(dest_field)
-        assert check_move_valid == "Valid move"
-
-    def test_invalid_movement_wrong_field_name(self):
-        data = FigureFactory.build()
-        pawn = Pawn(**data)
-        dest_field = f"A{int(pawn.field[1]) + 1}"
-        check_move_valid = pawn.validate_move(dest_field)
-        assert check_move_valid == "Invalid move"
+        assert dest_field in available_moves
 
     def test_invalid_movement_wrong_field_number(self):
         data = FigureFactory.build()
         pawn = Pawn(**data)
         dest_field = f"{pawn.field[0]}{int(pawn.field[1]) - 3}"
-        check_move_valid = pawn.validate_move(dest_field)
-        assert check_move_valid == "Invalid move"
+        try:
+            pawn.validate_move(dest_field)
+        except MoveNotPermittedError as err:
+            error = err.args[0]
+        assert error == "Current move is not permitted."
 
     def __list_available_moves(self, field: str) -> list:
         available_moves = list()
@@ -68,8 +61,7 @@ class TestBishop:
         bishop = Bishop(**data)
         expected_moves = self.__list_available_moves(data["field"])
         available_moves = bishop.list_available_moves()
-        # numpy arrays need to wrap them to list // might want to wrap before returning
-        assert list(available_moves) == list(expected_moves)
+        assert available_moves == expected_moves
 
     def test_valid_move_bishop(self):
         data = FigureFactory.build()
@@ -79,7 +71,6 @@ class TestBishop:
             dest_field = f"G{int(bishop.field[1]) + 1}"
         else:
             dest_field = f"G{int(bishop.field[1]) - 1}"
-        # numpy arrays need to wrap them to list // might want to wrap before returning
         assert dest_field in available_moves
 
     def test_invalid_move_bishop(self):
@@ -87,14 +78,13 @@ class TestBishop:
         bishop = Bishop(**data)
         available_moves = self.__list_available_moves(data["field"])
         dest_field = f"A{int(bishop.field[1]) - 1}"
-        # numpy arrays need to wrap them to list // might want to wrap before returning
         assert dest_field not in available_moves
 
     def __list_available_moves(self, field: str) -> list:
         available_moves = list()
 
-        x, y = np.where(chess_board == field)
-        for xint, yint in chessDiagonals:
+        x, y = np.where(CHESS_BOARD == field)
+        for xint, yint in CHESS_DIAGONALS:
             xtemp, ytemp = x[0] + xint, y[0] + yint
             while is_in_bounds(xtemp, ytemp):
                 available_moves.append((xtemp, ytemp))
@@ -104,8 +94,8 @@ class TestBishop:
         Y = np.transpose(available_moves)[0]
         X = np.transpose(available_moves)[1]
 
-        available_moves = chess_board[Y, X]
-        return available_moves
+        available_moves = CHESS_BOARD[Y, X]
+        return available_moves.tolist()
 
 
 class TestKnight:
@@ -114,8 +104,7 @@ class TestKnight:
         knight = Knight(**data)
         expected_moves = self.__list_available_moves(data["field"])
         available_moves = knight.list_available_moves()
-        # numpy arrays need to wrap them to list // might want to wrap before returning
-        assert list(available_moves) == list(expected_moves)
+        assert available_moves == expected_moves
 
     def test_validate_move_knight(self):
         data = FigureFactory.build()
@@ -125,19 +114,31 @@ class TestKnight:
             dest_field = f"F{int(knight.field[1]) - 1}"
         else:
             dest_field = f"F{int(knight.field[1]) + 1}"
-        # numpy arrays need to wrap them to list // might want to wrap before returning
         assert dest_field in available_moves
 
     def __list_available_moves(self, field: str) -> list:
-        x, y = np.where(chess_board == field)
+        x, y = np.where(CHESS_BOARD == field)
         available_moves = list()
-        for xx, yy in knight_list(x[0], y[0], 2, 1):
+        for xx, yy in self.__knight_list(x[0], y[0], 2, 1):
             if is_in_bounds(xx, yy):
                 available_moves.append((xx, yy))
         Y = np.transpose(available_moves)[0]
         X = np.transpose(available_moves)[1]
-        available_moves = chess_board[Y, X]
-        return available_moves
+        available_moves = CHESS_BOARD[Y, X]
+        return available_moves.tolist()
+
+    def __knight_list(self, x: int, y: int, int1: int, int2: int) -> list:
+
+        return [
+            (x + int1, y + int2),
+            (x - int1, y + int2),
+            (x + int1, y - int2),
+            (x - int1, y - int2),
+            (x + int2, y + int1),
+            (x - int2, y + int1),
+            (x + int2, y - int1),
+            (x - int2, y - int1),
+        ]
 
 
 class TestRook:
@@ -146,8 +147,7 @@ class TestRook:
         rook = Rook(**data)
         expected_moves = self.__list_available_moves(data["field"])
         available_moves = rook.list_available_moves()
-        # numpy arrays need to wrap them to list // might want to wrap before returning
-        assert list(available_moves) == list(expected_moves)
+        assert available_moves == expected_moves
 
     def test_valid_move_rook(self):
         data = FigureFactory.build()
@@ -157,7 +157,6 @@ class TestRook:
             dest_field = f"H{int(rook.field[1]) + 1}"
         else:
             dest_field = f"H{int(rook.field[1]) - 1}"
-        # numpy arrays need to wrap them to list // might want to wrap before returning
         assert dest_field in available_moves
 
     def test_invalid_move_rook(self):
@@ -165,14 +164,13 @@ class TestRook:
         rook = Rook(**data)
         available_moves = self.__list_available_moves(data["field"])
         dest_field = f"A{int(rook.field[1]) - 1}"
-        # numpy arrays need to wrap them to list // might want to wrap before returning
         assert dest_field not in available_moves
 
     def __list_available_moves(self, field: str) -> list:
         available_moves = list()
 
-        x, y = np.where(chess_board == field)
-        for xint, yint in chessCardinals:
+        x, y = np.where(CHESS_BOARD == field)
+        for xint, yint in CHESS_CARDINALS:
             xtemp, ytemp = x[0] + xint, y[0] + yint
             while is_in_bounds(xtemp, ytemp):
                 available_moves.append((xtemp, ytemp))
@@ -182,9 +180,8 @@ class TestRook:
         Y = np.transpose(available_moves)[0]
         X = np.transpose(available_moves)[1]
 
-        available_moves = chess_board[Y, X]
-        return available_moves
-
+        available_moves = CHESS_BOARD[Y, X]
+        return available_moves.tolist()
 
     class TestQueen:
         def test_list_available_moves_queen(self):
@@ -192,8 +189,7 @@ class TestRook:
             queen = Queen(**data)
             expected_moves = self.__list_available_moves(data["field"])
             available_moves = queen.list_available_moves()
-            # numpy arrays need to wrap them to list // might want to wrap before returning
-            assert list(available_moves) == list(expected_moves)
+            assert available_moves == expected_moves
 
         def test_valid_move_queen(self):
             data = FigureFactory.build()
@@ -203,7 +199,6 @@ class TestRook:
                 dest_field = f"G{int(queen.field[1]) + 1}"
             else:
                 dest_field = f"G{int(queen.field[1]) - 1}"
-            # numpy arrays need to wrap them to list // might want to wrap before returning
             assert dest_field in available_moves
 
         def test_invalid_move_queen(self):
@@ -211,14 +206,13 @@ class TestRook:
             queen = Queen(**data)
             available_moves = self.__list_available_moves(data["field"])
             dest_field = f"A{int(queen.field[1]) - 1}"
-            # numpy arrays need to wrap them to list // might want to wrap before returning
             assert dest_field not in available_moves
 
         def __list_available_moves(self, field: str) -> list:
             available_moves = list()
 
-            x, y = np.where(chess_board == field)
-            for xint, yint in chessDiagonals + chessCardinals:
+            x, y = np.where(CHESS_BOARD == field)
+            for xint, yint in CHESS_DIAGONALS + CHESS_CARDINALS:
                 xtemp, ytemp = x[0] + xint, y[0] + yint
                 while is_in_bounds(xtemp, ytemp):
                     available_moves.append((xtemp, ytemp))
@@ -228,8 +222,8 @@ class TestRook:
             Y = np.transpose(available_moves)[0]
             X = np.transpose(available_moves)[1]
 
-            available_moves = chess_board[Y, X]
-            return available_moves
+            available_moves = CHESS_BOARD[Y, X]
+            return available_moves.tolist()
 
     class TestKing:
         def test_list_available_moves_knight(self):
@@ -237,8 +231,7 @@ class TestRook:
             king = King(**data)
             expected_moves = self.__list_available_moves(data["field"])
             available_moves = king.list_available_moves()
-            # numpy arrays need to wrap them to list // might want to wrap before returning
-            assert list(available_moves) == list(expected_moves)
+            assert available_moves == expected_moves
 
         def test_validate_move_knight(self):
             data = FigureFactory.build()
@@ -248,16 +241,27 @@ class TestRook:
                 dest_field = f"H{int(king.field[1]) - 1}"
             else:
                 dest_field = f"H{int(king.field[1]) + 1}"
-            # numpy arrays need to wrap them to list // might want to wrap before returning
             assert dest_field in available_moves
 
         def __list_available_moves(self, field: str) -> list:
-            x, y = np.where(chess_board == field)
+            x, y = np.where(CHESS_BOARD == field)
             available_moves = list()
-            for xx, yy in king_list(x[0], y[0]):
+            for xx, yy in self.__king_list(x[0], y[0]):
                 if is_in_bounds(xx, yy):
                     available_moves.append((xx, yy))
             Y = np.transpose(available_moves)[0]
             X = np.transpose(available_moves)[1]
-            available_moves = chess_board[Y, X]
-            return available_moves
+            available_moves = CHESS_BOARD[Y, X]
+            return available_moves.tolist()
+
+        def __king_list(self, x: int, y: int) -> list:
+            return [
+                (x + 1, y),
+                (x + 1, y + 1),
+                (x + 1, y - 1),
+                (x, y + 1),
+                (x, y - 1),
+                (x - 1, y),
+                (x - 1, y + 1),
+                (x - 1, y - 1),
+            ]

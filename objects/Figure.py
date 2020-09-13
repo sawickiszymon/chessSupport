@@ -1,6 +1,10 @@
 from abc import ABC, abstractmethod
-from settings import *
-from utils import *
+
+import numpy as np
+
+from exceptions import MoveNotPermittedError
+from settings import CHESS_BOARD, CHESS_DIAGONALS, CHESS_CARDINALS
+from utils import get_field_coordinates, is_in_bounds
 
 
 class Figure(ABC):
@@ -20,42 +24,42 @@ class Context:
     def __init__(self, strategy: Figure) -> None:
         self._strategy = strategy
 
-    # @property
-    # def strategy(self) -> Figure:
-    #     return self._strategy
-    #
-    # @strategy.setter
-    # def strategy(self, strategy: Figure) -> None:
-    #     self._strategy = strategy
-
-    def list_moves(self) -> None:
+    def list_moves(self) -> list:
         result = self._strategy.list_available_moves()
         return result
 
-    def validate_move(self, dest_field) -> None:
-        result = self._strategy.validate_move(dest_field)
-        return result
+    def validate_move(self, dest_field: str) -> None:
+        self._strategy.validate_move(dest_field)
 
 
 class King(Figure):
     def list_available_moves(self) -> list:
         x, y = get_field_coordinates(self.field)
         available_moves = list()
-        for xx, yy in king_list(x, y):
+        for xx, yy in self.__king_list(x, y):
             if is_in_bounds(xx, yy):
                 available_moves.append((xx, yy))
         Y = np.transpose(available_moves)[0]
         X = np.transpose(available_moves)[1]
-        available_moves = chess_board[Y, X]
+        available_moves = CHESS_BOARD[Y, X]
         return available_moves.tolist()
 
-    def validate_move(self, dest_field: str):
+    def validate_move(self, dest_field: str) -> None:
         available_moves = self.list_available_moves()
-        for moves in available_moves:
-            if moves == dest_field:
-                return "valid"
-        raise MoveNotPermittedError("Current move is not permitted.")
-        # return "invalid"
+        if dest_field not in available_moves:
+            raise MoveNotPermittedError("Current move is not permitted.")
+
+    def __king_list(self, x: int, y: int) -> list:
+        return [
+            (x + 1, y),
+            (x + 1, y + 1),
+            (x + 1, y - 1),
+            (x, y + 1),
+            (x, y - 1),
+            (x - 1, y),
+            (x - 1, y + 1),
+            (x - 1, y - 1),
+        ]
 
 
 class Pawn(Figure):
@@ -67,12 +71,10 @@ class Pawn(Figure):
         available_moves.append(f"{field_name}{new_field_number}")
         return available_moves
 
-    def validate_move(self, dest_field: str) -> str:
+    def validate_move(self, dest_field: str) -> None:
         valid_move = self.list_available_moves()
-        if valid_move[0] == dest_field:
-            return "valid"
-        else:
-            return "invalid"
+        if dest_field not in valid_move:
+            raise MoveNotPermittedError("Current move is not permitted.")
 
     def __get_field_pole(self) -> [str, int]:
         field_number = int(self.field[1])
@@ -85,7 +87,7 @@ class Queen(Figure):
         available_moves = list()
 
         x, y = get_field_coordinates(self.field)
-        for xint, yint in chessDiagonals + chessCardinals:
+        for xint, yint in CHESS_DIAGONALS + CHESS_CARDINALS:
             xtemp, ytemp = x + xint, y + yint
             while is_in_bounds(xtemp, ytemp):
 
@@ -96,15 +98,13 @@ class Queen(Figure):
         Y = np.transpose(available_moves)[0]
         X = np.transpose(available_moves)[1]
 
-        available_moves = chess_board[Y, X]
+        available_moves = CHESS_BOARD[Y, X]
         return available_moves.tolist()
 
-    def validate_move(self, dest_field: str):
+    def validate_move(self, dest_field: str) -> None:
         available_moves = self.list_available_moves()
-        for moves in available_moves:
-            if moves == dest_field:
-                return "valid"
-        return "invalid"
+        if dest_field not in available_moves:
+            raise MoveNotPermittedError("Current move is not permitted.")
 
 
 class Rook(Figure):
@@ -112,7 +112,7 @@ class Rook(Figure):
         available_moves = list()
 
         x, y = get_field_coordinates(self.field)
-        for xint, yint in chessCardinals:
+        for xint, yint in CHESS_CARDINALS:
             xtemp, ytemp = x + xint, y + yint
             while is_in_bounds(xtemp, ytemp):
 
@@ -123,22 +123,20 @@ class Rook(Figure):
         Y = np.transpose(available_moves)[0]
         X = np.transpose(available_moves)[1]
 
-        available_moves = chess_board[Y, X]
+        available_moves = CHESS_BOARD[Y, X]
         return available_moves.tolist()
 
-    def validate_move(self, dest_field):
+    def validate_move(self, dest_field) -> None:
         available_moves = self.list_available_moves()
-        for moves in available_moves:
-            if moves == dest_field:
-                return "valid"
-        return "invalid"
+        if dest_field not in available_moves:
+            raise MoveNotPermittedError("Current move is not permitted.")
 
 
 class Bishop(Figure):
     def list_available_moves(self) -> list:
         available_moves = list()
         x, y = get_field_coordinates(self.field)
-        for xint, yint in chessDiagonals:
+        for xint, yint in CHESS_DIAGONALS:
             xtemp, ytemp = x + xint, y + yint
             while is_in_bounds(xtemp, ytemp):
 
@@ -149,32 +147,41 @@ class Bishop(Figure):
         Y = np.transpose(available_moves)[0]
         X = np.transpose(available_moves)[1]
 
-        available_moves = chess_board[Y, X]
+        available_moves = CHESS_BOARD[Y, X]
         return available_moves.tolist()
 
-    def validate_move(self, dest_field):
+    def validate_move(self, dest_field) -> None:
         available_moves = self.list_available_moves()
-        for moves in available_moves:
-            if moves == dest_field:
-                return "valid"
-        return "invalid"
+        if dest_field not in available_moves:
+            raise MoveNotPermittedError("Current move is not permitted.")
 
 
 class Knight(Figure):
     def list_available_moves(self) -> list:
         x, y = get_field_coordinates(self.field)
         available_moves = list()
-        for xx, yy in knight_list(x, y, 2, 1):
+        for xx, yy in self.__knight_list(x, y, 2, 1):
             if is_in_bounds(xx, yy):
                 available_moves.append((xx, yy))
         Y = np.transpose(available_moves)[0]
         X = np.transpose(available_moves)[1]
-        available_moves = chess_board[Y, X]
+        available_moves = CHESS_BOARD[Y, X]
         return available_moves.tolist()
 
-    def validate_move(self, dest_field: str):
+    def validate_move(self, dest_field: str) -> None:
         available_moves = self.list_available_moves()
-        for moves in available_moves:
-            if moves == dest_field:
-                return "valid"
-        return "invalid"
+        if dest_field not in available_moves:
+            raise MoveNotPermittedError("Current move is not permitted.")
+
+    def __knight_list(self, x: int, y: int, int1: int, int2: int) -> list:
+
+        return [
+            (x + int1, y + int2),
+            (x - int1, y + int2),
+            (x + int1, y - int2),
+            (x - int1, y - int2),
+            (x + int2, y + int1),
+            (x - int2, y + int1),
+            (x + int2, y - int1),
+            (x - int2, y - int1),
+        ]
