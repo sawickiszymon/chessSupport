@@ -1,10 +1,10 @@
-#Simple Chess support api
+# Simple Chess support api
 
 First clone the repository:
 ```
 git clone https://github.com/sawickiszymon/chessSupport
 ```
-Get into to repository and install dependencies:
+Install dependencies:
 ```
 cd chessSupport
 pip3 install -r requirements.txt
