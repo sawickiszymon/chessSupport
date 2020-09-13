@@ -1,6 +1,6 @@
 import numpy as np
 
-chess_board = np.array(
+CHESS_BOARD = np.array(
     [
         ["A8", "B8", "C8", "D8", "E8", "F8", "G8", "H8"],
         ["A7", "B7", "C7", "D7", "E7", "F7", "G7", "H7"],
@@ -11,7 +11,7 @@ chess_board = np.array(
         ["A2", "B2", "C2", "D2", "E2", "F2", "G2", "H2"],
         ["A1", "B1", "C1", "D1", "E1", "F1", "G1", "H1"],
     ],
-    dtype=object,
+    dtype=str,
 )
-chessDiagonals = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
-chessCardinals = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+CHESS_DIAGONALS = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
+CHESS_CARDINALS = [(1, 0), (0, 1), (-1, 0), (0, -1)]
