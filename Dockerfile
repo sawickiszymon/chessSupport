@@ -1,7 +1,6 @@
-FROM python:3.6-alpine AS builder
+FROM python:3.6-alpine
 
 RUN apk update
-# missing c++ compiler for numpy
 ENV FLASK_APP app.py
 ENV FLASK_RUN_HOST 0.0.0.0
 RUN apk add --no-cache gcc musl-dev linux-headers
@@ -13,5 +12,6 @@ COPY . /app
 
 WORKDIR /app
 
-# copy the content of the local src directory to the working directory
-CMD ["python", "app.py"]
+EXPOSE 5000
+
+CMD ["flask", "run"]
