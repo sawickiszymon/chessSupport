@@ -20,8 +20,6 @@ class TestPawn:
 
         assert error == "Field does not exist."
 
-
-
     def test_middle_field_valid_movement(self):
         middle_field = "D4"
         data = FigureFactory.build(field=middle_field)
