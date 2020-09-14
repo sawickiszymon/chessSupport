@@ -24,7 +24,7 @@ Init empty repository with bundle file in it and pull its contents
 
 ```
 git init
-git pull szymon_sawicki.bundle master
+git pull SZYMON_SAWICKI.bundle master
 ```
 
 Install the dependencies and run the application:
