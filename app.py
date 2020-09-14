@@ -1,10 +1,9 @@
 from flask import Flask
-
-from utils import FieldOutOfBoundsError
+from exceptions import MoveNotPermittedError, FieldOutOfBoundsError
+from objects.Figure import Context, Pawn, Rook, King, Knight, Queen, Bishop
 
 app = Flask(__name__)
 
-from objects.Figure import *
 
 CLASS_NAMES = {
     "pawn": Pawn,
