@@ -3,7 +3,7 @@ import numpy as np
 from exceptions import FieldOutOfBoundsError, MoveNotPermittedError
 from factories.figure_factory import FigureFactory
 from objects.Figure import Pawn, Bishop, Knight, Rook, Queen, King
-from settings import CHESS_BOARD, CHESS_DIAGONALS, CHESS_CARDINALS
+from settings import CHESS_BOARD, CHESS_DIAGONALS, CHESS_CARDINALS, CHESS_DIMENSION
 from utils import is_in_bounds
 
 
@@ -20,12 +20,7 @@ class TestPawn:
 
         assert error == "Field does not exist."
 
-    def test_list_available_moves_pawn(self):
-        data = FigureFactory.build()
-        expected_move = self.__list_available_moves(data["field"])
-        pawn = Pawn(**data)
-        available_moves = pawn.list_available_moves()
-        assert available_moves == expected_move
+
 
     def test_middle_field_valid_movement(self):
         middle_field = "D4"
@@ -35,13 +30,13 @@ class TestPawn:
         dest_field = f"{pawn.field[0]}{int(pawn.field[1]) + 1}"
         assert dest_field in available_moves
 
-    def test_edge_field_valid_movement(self):
+    def test_edge_field_invalid_movement(self):
         edge_field = "H8"
         data = FigureFactory.build(field=edge_field)
         pawn = Pawn(**data)
         available_moves = pawn.list_available_moves()
-        dest_field = f"{pawn.field[0]}{int(pawn.field[1]) - 1}"
-        assert dest_field in available_moves
+        dest_field = []
+        assert dest_field == available_moves
 
     def test_invalid_movement_wrong_field_number(self):
         data = FigureFactory.build()
@@ -53,11 +48,18 @@ class TestPawn:
             error = err.args[0]
         assert error == "Current move is not permitted."
 
+    def test_list_available_moves_pawn(self):
+        data = FigureFactory.build()
+        expected_move = self.__list_available_moves(data["field"])
+        pawn = Pawn(**data)
+        available_moves = pawn.list_available_moves()
+        assert available_moves == expected_move
+
     def __list_available_moves(self, field: str) -> list:
         available_moves = list()
         field_number = int(field[1])
         field_name = field[0]
-        if field_number < 8:
+        if field_number < CHESS_DIMENSION[1]:
             new_field_number = field_number + 1
             available_moves.append(f"{field_name}{new_field_number}")
         else:

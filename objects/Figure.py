@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from exceptions import MoveNotPermittedError
-from settings import CHESS_BOARD, CHESS_DIAGONALS, CHESS_CARDINALS
+from settings import CHESS_BOARD, CHESS_DIAGONALS, CHESS_CARDINALS, CHESS_DIMENSION
 from utils import get_field_coordinates, is_in_bounds
 
 
@@ -68,8 +68,8 @@ class Pawn(Figure):
     def list_available_moves(self) -> list:
         x, y = get_field_coordinates(self.field)
         field_name, field_number = self.__get_field_pole()
-        if x == 0:
-            new_field_number = field_number - 1
+        if x == CHESS_DIMENSION[0]:
+            return []
         else:
             new_field_number = field_number + 1
         available_moves = [f"{field_name}{new_field_number}"]
