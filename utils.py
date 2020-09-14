@@ -1,12 +1,15 @@
 import numpy as np
 
 from exceptions import FieldOutOfBoundsError
-from settings import CHESS_BOARD
+from settings import CHESS_BOARD, CHESS_DIMENSION
 
 
 def is_in_bounds(x: int, y: int) -> bool:
     # checks if position in bounds
-    if 0 <= x < 8 and 0 <= y < 8:
+    if (
+        CHESS_DIMENSION[0] <= x < CHESS_DIMENSION[1]
+        and CHESS_DIMENSION[0] <= y < CHESS_DIMENSION[1]
+    ):
         return True
     return False
 

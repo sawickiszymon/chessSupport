@@ -15,3 +15,5 @@ CHESS_BOARD = np.array(
 )
 CHESS_DIAGONALS = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
 CHESS_CARDINALS = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+
+CHESS_DIMENSION = [0, 8]
