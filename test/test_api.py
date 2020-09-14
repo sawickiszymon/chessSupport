@@ -1,6 +1,3 @@
-import pdb
-
-import pytest
 from app import app
 
 
@@ -83,14 +80,13 @@ def test_get_validate_invalid_move_king_response_409():
 
 def test_get_validate_invalid_move_bishop_response_409():
     response = app.test_client().get("/api/v1/king/H4/H6")
-    body = response.json
-    move = body["move"]
     assert response.status_code == 409
 
 
 def test_get_validate_invalid_move_pawn_response_409():
     response = app.test_client().get("/api/v1/pawn/H4/H7")
     assert response.status_code == 409
+
 
 def get_error(response: app.response_class) -> str:
     body = response.json

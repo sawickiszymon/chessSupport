@@ -36,12 +36,14 @@ class King(Figure):
     def list_available_moves(self) -> list:
         x, y = get_field_coordinates(self.field)
         available_moves = list()
-        for xx, yy in self.__king_list(x, y):
-            if is_in_bounds(xx, yy):
-                available_moves.append((xx, yy))
-        Y = np.transpose(available_moves)[0]
-        X = np.transpose(available_moves)[1]
-        available_moves = CHESS_BOARD[Y, X]
+        for x_position, y_position in self.__king_list(x, y):
+            if is_in_bounds(x_position, y_position):
+                available_moves.append((x_position, y_position))
+        available_move_y_position = np.transpose(available_moves)[0]
+        available_move_x_position = np.transpose(available_moves)[1]
+        available_moves = CHESS_BOARD[
+            available_move_y_position, available_move_x_position
+        ]
         return available_moves.tolist()
 
     def validate_move(self, dest_field: str) -> None:
@@ -64,11 +66,13 @@ class King(Figure):
 
 class Pawn(Figure):
     def list_available_moves(self) -> list:
-        available_moves, error = list(), None
         x, y = get_field_coordinates(self.field)
         field_name, field_number = self.__get_field_pole()
-        new_field_number = field_number + 1
-        available_moves.append(f"{field_name}{new_field_number}")
+        if x == 0:
+            new_field_number = field_number - 1
+        else:
+            new_field_number = field_number + 1
+        available_moves = [f"{field_name}{new_field_number}"]
         return available_moves
 
     def validate_move(self, dest_field: str) -> None:
@@ -87,18 +91,20 @@ class Queen(Figure):
         available_moves = list()
 
         x, y = get_field_coordinates(self.field)
-        for xint, yint in CHESS_DIAGONALS + CHESS_CARDINALS:
-            xtemp, ytemp = x + xint, y + yint
-            while is_in_bounds(xtemp, ytemp):
+        for x_shift, y_shift in CHESS_DIAGONALS + CHESS_CARDINALS:
+            x_temp, y_temp = x + x_shift, y + y_shift
+            while is_in_bounds(x_temp, y_temp):
 
-                available_moves.append((xtemp, ytemp))
+                available_moves.append((x_temp, y_temp))
 
-                xtemp, ytemp = xtemp + xint, ytemp + yint
+                x_temp, y_temp = x_temp + x_shift, y_temp + y_shift
 
-        Y = np.transpose(available_moves)[0]
-        X = np.transpose(available_moves)[1]
+        available_move_y_position = np.transpose(available_moves)[0]
+        available_move_x_position = np.transpose(available_moves)[1]
 
-        available_moves = CHESS_BOARD[Y, X]
+        available_moves = CHESS_BOARD[
+            available_move_y_position, available_move_x_position
+        ]
         return available_moves.tolist()
 
     def validate_move(self, dest_field: str) -> None:
@@ -112,18 +118,20 @@ class Rook(Figure):
         available_moves = list()
 
         x, y = get_field_coordinates(self.field)
-        for xint, yint in CHESS_CARDINALS:
-            xtemp, ytemp = x + xint, y + yint
-            while is_in_bounds(xtemp, ytemp):
+        for x_shift, y_shift in CHESS_CARDINALS:
+            x_temp, y_temp = x + x_shift, y + y_shift
+            while is_in_bounds(x_temp, y_temp):
 
-                available_moves.append((xtemp, ytemp))
+                available_moves.append((x_temp, y_temp))
 
-                xtemp, ytemp = xtemp + xint, ytemp + yint
+                x_temp, y_temp = x_temp + x_shift, y_temp + y_shift
 
-        Y = np.transpose(available_moves)[0]
-        X = np.transpose(available_moves)[1]
+        available_move_y_position = np.transpose(available_moves)[0]
+        available_move_x_position = np.transpose(available_moves)[1]
 
-        available_moves = CHESS_BOARD[Y, X]
+        available_moves = CHESS_BOARD[
+            available_move_y_position, available_move_x_position
+        ]
         return available_moves.tolist()
 
     def validate_move(self, dest_field) -> None:
@@ -136,18 +144,20 @@ class Bishop(Figure):
     def list_available_moves(self) -> list:
         available_moves = list()
         x, y = get_field_coordinates(self.field)
-        for xint, yint in CHESS_DIAGONALS:
-            xtemp, ytemp = x + xint, y + yint
-            while is_in_bounds(xtemp, ytemp):
+        for x_shift, y_shift in CHESS_DIAGONALS:
+            x_temp, y_temp = x + x_shift, y + y_shift
+            while is_in_bounds(x_temp, y_temp):
 
-                available_moves.append((xtemp, ytemp))
+                available_moves.append((x_temp, y_temp))
 
-                xtemp, ytemp = xtemp + xint, ytemp + yint
+                x_temp, y_temp = x_temp + x_shift, y_temp + y_shift
 
-        Y = np.transpose(available_moves)[0]
-        X = np.transpose(available_moves)[1]
+        available_move_y_position = np.transpose(available_moves)[0]
+        available_move_x_position = np.transpose(available_moves)[1]
 
-        available_moves = CHESS_BOARD[Y, X]
+        available_moves = CHESS_BOARD[
+            available_move_y_position, available_move_x_position
+        ]
         return available_moves.tolist()
 
     def validate_move(self, dest_field) -> None:
@@ -160,12 +170,14 @@ class Knight(Figure):
     def list_available_moves(self) -> list:
         x, y = get_field_coordinates(self.field)
         available_moves = list()
-        for xx, yy in self.__knight_list(x, y, 2, 1):
-            if is_in_bounds(xx, yy):
-                available_moves.append((xx, yy))
-        Y = np.transpose(available_moves)[0]
-        X = np.transpose(available_moves)[1]
-        available_moves = CHESS_BOARD[Y, X]
+        for x_position, y_position in self.__knight_list(x, y, 2, 1):
+            if is_in_bounds(x_position, y_position):
+                available_moves.append((x_position, y_position))
+        available_move_y_position = np.transpose(available_moves)[0]
+        available_move_x_position = np.transpose(available_moves)[1]
+        available_moves = CHESS_BOARD[
+            available_move_y_position, available_move_x_position
+        ]
         return available_moves.tolist()
 
     def validate_move(self, dest_field: str) -> None:

@@ -1,4 +1,3 @@
-import pdb
 import numpy as np
 
 from exceptions import FieldOutOfBoundsError, MoveNotPermittedError
@@ -28,11 +27,20 @@ class TestPawn:
         available_moves = pawn.list_available_moves()
         assert available_moves == expected_move
 
-    def test_valid_movement(self):
-        data = FigureFactory.build()
+    def test_middle_field_valid_movement(self):
+        middle_field = "D4"
+        data = FigureFactory.build(field=middle_field)
         pawn = Pawn(**data)
         available_moves = pawn.list_available_moves()
         dest_field = f"{pawn.field[0]}{int(pawn.field[1]) + 1}"
+        assert dest_field in available_moves
+
+    def test_edge_field_valid_movement(self):
+        edge_field = "H8"
+        data = FigureFactory.build(field=edge_field)
+        pawn = Pawn(**data)
+        available_moves = pawn.list_available_moves()
+        dest_field = f"{pawn.field[0]}{int(pawn.field[1]) - 1}"
         assert dest_field in available_moves
 
     def test_invalid_movement_wrong_field_number(self):
@@ -49,10 +57,13 @@ class TestPawn:
         available_moves = list()
         field_number = int(field[1])
         field_name = field[0]
-        new_field_number = field_number + 1
         if field_number < 8:
+            new_field_number = field_number + 1
             available_moves.append(f"{field_name}{new_field_number}")
-        return list(available_moves)
+        else:
+            new_field_number = field_number - 1
+            available_moves = [f"{field_name}{new_field_number}"]
+        return available_moves
 
 
 class TestBishop:
@@ -63,14 +74,20 @@ class TestBishop:
         available_moves = bishop.list_available_moves()
         assert available_moves == expected_moves
 
-    def test_valid_move_bishop(self):
-        data = FigureFactory.build()
+    def test_middle_field_valid_move_bishop(self):
+        middle_field = "D4"
+        data = FigureFactory.build(field=middle_field)
         bishop = Bishop(**data)
         available_moves = self.__list_available_moves(data["field"])
-        if bishop.field == "H1":
-            dest_field = f"G{int(bishop.field[1]) + 1}"
-        else:
-            dest_field = f"G{int(bishop.field[1]) - 1}"
+        dest_field = f"E{int(bishop.field[1]) + 1}"
+        assert dest_field in available_moves
+
+    def test_edge_field_valid_move_bishop(self):
+        edge_field = "H8"
+        data = FigureFactory.build(field=edge_field)
+        bishop = Bishop(**data)
+        available_moves = self.__list_available_moves(data["field"])
+        dest_field = f"E{int(bishop.field[1]) - 3}"
         assert dest_field in available_moves
 
     def test_invalid_move_bishop(self):
@@ -84,17 +101,19 @@ class TestBishop:
         available_moves = list()
 
         x, y = np.where(CHESS_BOARD == field)
-        for xint, yint in CHESS_DIAGONALS:
-            xtemp, ytemp = x[0] + xint, y[0] + yint
-            while is_in_bounds(xtemp, ytemp):
-                available_moves.append((xtemp, ytemp))
+        for x_shift, y_shift in CHESS_DIAGONALS:
+            x_temp, y_temp = x[0] + x_shift, y[0] + y_shift
+            while is_in_bounds(x_temp, y_temp):
+                available_moves.append((x_temp, y_temp))
 
-                xtemp, ytemp = xtemp + xint, ytemp + yint
+                x_temp, y_temp = x_temp + x_shift, y_temp + y_shift
 
-        Y = np.transpose(available_moves)[0]
-        X = np.transpose(available_moves)[1]
+        available_move_y_position = np.transpose(available_moves)[0]
+        available_move_x_position = np.transpose(available_moves)[1]
 
-        available_moves = CHESS_BOARD[Y, X]
+        available_moves = CHESS_BOARD[
+            available_move_y_position, available_move_x_position
+        ]
         return available_moves.tolist()
 
 
@@ -106,25 +125,33 @@ class TestKnight:
         available_moves = knight.list_available_moves()
         assert available_moves == expected_moves
 
-    def test_validate_move_knight(self):
-        data = FigureFactory.build()
+    def test_middle_field_validate_move_knight(self):
+        middle_field = "D4"
+        data = FigureFactory.build(field=middle_field)
         knight = Knight(**data)
         available_moves = self.__list_available_moves(data["field"])
-        if knight.field[1] == "8":
-            dest_field = f"F{int(knight.field[1]) - 1}"
-        else:
-            dest_field = f"F{int(knight.field[1]) + 1}"
+        dest_field = f"F{int(knight.field[1]) - 1}"
+        assert dest_field in available_moves
+
+    def test_edge_field_validate_move_knight(self):
+        edge_field = "H8"
+        data = FigureFactory.build(field=edge_field)
+        knight = Knight(**data)
+        available_moves = self.__list_available_moves(data["field"])
+        dest_field = f"F{int(knight.field[1]) - 1}"
         assert dest_field in available_moves
 
     def __list_available_moves(self, field: str) -> list:
         x, y = np.where(CHESS_BOARD == field)
         available_moves = list()
-        for xx, yy in self.__knight_list(x[0], y[0], 2, 1):
-            if is_in_bounds(xx, yy):
-                available_moves.append((xx, yy))
-        Y = np.transpose(available_moves)[0]
-        X = np.transpose(available_moves)[1]
-        available_moves = CHESS_BOARD[Y, X]
+        for x_position, y_position in self.__knight_list(x[0], y[0], 2, 1):
+            if is_in_bounds(x_position, y_position):
+                available_moves.append((x_position, y_position))
+        available_move_y_position = np.transpose(available_moves)[0]
+        available_move_x_position = np.transpose(available_moves)[1]
+        available_moves = CHESS_BOARD[
+            available_move_y_position, available_move_x_position
+        ]
         return available_moves.tolist()
 
     def __knight_list(self, x: int, y: int, int1: int, int2: int) -> list:
@@ -149,14 +176,20 @@ class TestRook:
         available_moves = rook.list_available_moves()
         assert available_moves == expected_moves
 
-    def test_valid_move_rook(self):
-        data = FigureFactory.build()
+    def test_middle_field_valid_move_rook(self):
+        middle_field = "D4"
+        data = FigureFactory.build(field=middle_field)
         rook = Rook(**data)
         available_moves = self.__list_available_moves(data["field"])
-        if rook.field == "H1":
-            dest_field = f"H{int(rook.field[1]) + 1}"
-        else:
-            dest_field = f"H{int(rook.field[1]) - 1}"
+        dest_field = f"D{int(rook.field[1]) - 1}"
+        assert dest_field in available_moves
+
+    def test_edge_field_valid_move_rook(self):
+        edge_field = "H8"
+        data = FigureFactory.build(field=edge_field)
+        rook = Rook(**data)
+        available_moves = self.__list_available_moves(data["field"])
+        dest_field = f"H{int(rook.field[1]) - 3}"
         assert dest_field in available_moves
 
     def test_invalid_move_rook(self):
@@ -170,17 +203,19 @@ class TestRook:
         available_moves = list()
 
         x, y = np.where(CHESS_BOARD == field)
-        for xint, yint in CHESS_CARDINALS:
-            xtemp, ytemp = x[0] + xint, y[0] + yint
-            while is_in_bounds(xtemp, ytemp):
-                available_moves.append((xtemp, ytemp))
+        for x_shift, y_shift in CHESS_CARDINALS:
+            x_temp, y_temp = x[0] + x_shift, y[0] + y_shift
+            while is_in_bounds(x_temp, y_temp):
+                available_moves.append((x_temp, y_temp))
 
-                xtemp, ytemp = xtemp + xint, ytemp + yint
+                x_temp, y_temp = x_temp + x_shift, y_temp + y_shift
 
-        Y = np.transpose(available_moves)[0]
-        X = np.transpose(available_moves)[1]
+        available_move_y_position = np.transpose(available_moves)[0]
+        available_move_x_position = np.transpose(available_moves)[1]
 
-        available_moves = CHESS_BOARD[Y, X]
+        available_moves = CHESS_BOARD[
+            available_move_y_position, available_move_x_position
+        ]
         return available_moves.tolist()
 
     class TestQueen:
@@ -191,14 +226,20 @@ class TestRook:
             available_moves = queen.list_available_moves()
             assert available_moves == expected_moves
 
-        def test_valid_move_queen(self):
-            data = FigureFactory.build()
+        def test_edge_field_valid_move_queen(self):
+            edge_field = "H8"
+            data = FigureFactory.build(field=edge_field)
             queen = Queen(**data)
             available_moves = self.__list_available_moves(data["field"])
-            if queen.field == "H1":
-                dest_field = f"G{int(queen.field[1]) + 1}"
-            else:
-                dest_field = f"G{int(queen.field[1]) - 1}"
+            dest_field = f"G{int(queen.field[1]) - 1}"
+            assert dest_field in available_moves
+
+        def test_middle_field_valid_move_queen(self):
+            middle_field = "D4"
+            data = FigureFactory.build(field=middle_field)
+            queen = Queen(**data)
+            available_moves = self.__list_available_moves(data["field"])
+            dest_field = f"E{int(queen.field[1]) - 1}"
             assert dest_field in available_moves
 
         def test_invalid_move_queen(self):
@@ -212,46 +253,56 @@ class TestRook:
             available_moves = list()
 
             x, y = np.where(CHESS_BOARD == field)
-            for xint, yint in CHESS_DIAGONALS + CHESS_CARDINALS:
-                xtemp, ytemp = x[0] + xint, y[0] + yint
-                while is_in_bounds(xtemp, ytemp):
-                    available_moves.append((xtemp, ytemp))
+            for x_shift, y_shift in CHESS_DIAGONALS + CHESS_CARDINALS:
+                x_temp, y_temp = x[0] + x_shift, y[0] + y_shift
+                while is_in_bounds(x_temp, y_temp):
+                    available_moves.append((x_temp, y_temp))
 
-                    xtemp, ytemp = xtemp + xint, ytemp + yint
+                    x_temp, y_temp = x_temp + x_shift, y_temp + y_shift
 
-            Y = np.transpose(available_moves)[0]
-            X = np.transpose(available_moves)[1]
+            available_move_y_position = np.transpose(available_moves)[0]
+            available_move_x_position = np.transpose(available_moves)[1]
 
-            available_moves = CHESS_BOARD[Y, X]
+            available_moves = CHESS_BOARD[
+                available_move_y_position, available_move_x_position
+            ]
             return available_moves.tolist()
 
     class TestKing:
-        def test_list_available_moves_knight(self):
+        def test_list_available_moves_king(self):
             data = FigureFactory.build()
             king = King(**data)
             expected_moves = self.__list_available_moves(data["field"])
             available_moves = king.list_available_moves()
             assert available_moves == expected_moves
 
-        def test_validate_move_knight(self):
-            data = FigureFactory.build()
+        def test_middle_field_validate_move_king(self):
+            middle_field = "D4"
+            data = FigureFactory.build(field=middle_field)
             king = King(**data)
             available_moves = self.__list_available_moves(data["field"])
-            if king.field[1] == "8":
-                dest_field = f"H{int(king.field[1]) - 1}"
-            else:
-                dest_field = f"H{int(king.field[1]) + 1}"
+            dest_field = f"D{int(king.field[1]) + 1}"
+            assert dest_field in available_moves
+
+        def test_edge_field_validate_move_king(self):
+            edge_field = "H8"
+            data = FigureFactory.build(field=edge_field)
+            king = King(**data)
+            available_moves = self.__list_available_moves(data["field"])
+            dest_field = f"H{int(king.field[1]) -1}"
             assert dest_field in available_moves
 
         def __list_available_moves(self, field: str) -> list:
             x, y = np.where(CHESS_BOARD == field)
             available_moves = list()
-            for xx, yy in self.__king_list(x[0], y[0]):
-                if is_in_bounds(xx, yy):
-                    available_moves.append((xx, yy))
-            Y = np.transpose(available_moves)[0]
-            X = np.transpose(available_moves)[1]
-            available_moves = CHESS_BOARD[Y, X]
+            for x_position, y_position in self.__king_list(x[0], y[0]):
+                if is_in_bounds(x_position, y_position):
+                    available_moves.append((x_position, y_position))
+            available_move_y_position = np.transpose(available_moves)[0]
+            available_move_x_position = np.transpose(available_moves)[1]
+            available_moves = CHESS_BOARD[
+                available_move_y_position, available_move_x_position
+            ]
             return available_moves.tolist()
 
         def __king_list(self, x: int, y: int) -> list:
